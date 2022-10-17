@@ -1,8 +1,7 @@
 package com.KeyWallet.api;
 
 import com.KeyWallet.entity.Password;
-import com.KeyWallet.entity.UserKW;
-import com.KeyWallet.models.UserCreateDto;
+import com.KeyWallet.models.UserCreateRequest;
 import com.KeyWallet.services.PasswordService;
 import com.KeyWallet.services.UserService;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +17,9 @@ public class KeyWalletController {
     private final PasswordService passwordService;
     private final UserService userService;
 
+
     @PostMapping("/user")
-    public ResponseEntity<?> createUser(@RequestBody UserCreateDto user){
+    public ResponseEntity<?> createUser(@RequestBody UserCreateRequest user){
 
         return ResponseEntity.ok(userService.save(user));
     }

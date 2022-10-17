@@ -11,9 +11,9 @@ import java.io.Serializable;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserCreateDto implements Serializable {
+public class UserCreateRequest implements Serializable {
 
     private String login;
     private String password;
-    private String algorithmType;
+    private Boolean keepAsHash;
 }
