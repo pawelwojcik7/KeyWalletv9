@@ -34,7 +34,4 @@ public class UserKW {
     @Column(name = "isPasswordKeptAsHash")
     private Boolean isPasswordKeptAsHash;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "userId")
-    private List<Password> passwords;
-
 }
