@@ -12,13 +12,14 @@ import java.security.MessageDigest;
 
 @Component
 @RequiredArgsConstructor
-public class SSH512{
+public class Sha512 {
 
     private final SaltProvider saltProvider;
 
     public UserKW encodeHashValue(UserDTO userDTO, String salt) {
+
         if(salt==null){
-        salt = saltProvider.generateSalt();
+            salt = saltProvider.generateSalt();
         }
 
         String password = calculateSHA512(salt + userDTO.getPassword());
@@ -31,8 +32,8 @@ public class SSH512{
 
         MessageDigest md = MessageDigest.getInstance("SHA-512");
         byte[] messageDigest = md.digest(text.getBytes());
-        BigInteger no = new BigInteger(1, messageDigest);
-        String hashtext = no.toString(16);
+        BigInteger bigInteger = new BigInteger(1, messageDigest);
+        String hashtext = bigInteger.toString(16);
         while (hashtext.length() < 32) {
             hashtext = "0" + hashtext;
         }

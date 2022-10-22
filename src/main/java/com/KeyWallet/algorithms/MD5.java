@@ -14,6 +14,6 @@ public class MD5 {
         MessageDigest md = MessageDigest.getInstance("MD5");
 
         return md.digest(text.getBytes());
-
     }
+
 }
