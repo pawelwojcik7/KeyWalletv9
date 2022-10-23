@@ -39,7 +39,7 @@ public class PasswordService {
     }
 
     @Transactional
-    public  void addPassword(PasswordDTO passwordDTO) throws PasswordException {
+    public void addPassword(PasswordDTO passwordDTO) throws PasswordException {
 
         UserKW userKW = userRepository.findByLogin(passwordDTO.getUserDTO().getLogin());
 

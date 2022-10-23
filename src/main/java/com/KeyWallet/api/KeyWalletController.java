@@ -1,18 +1,19 @@
 package com.KeyWallet.api;
 
-import com.KeyWallet.models.*;
 import com.KeyWallet.entity.Password;
 import com.KeyWallet.exception.PasswordException;
 import com.KeyWallet.exception.UserLogInException;
 import com.KeyWallet.exception.UserRegisterException;
-import com.KeyWallet.repository.UserRepository;
+import com.KeyWallet.models.ChangePasswordDTO;
+import com.KeyWallet.models.CryptResponse;
+import com.KeyWallet.models.PasswordDTO;
+import com.KeyWallet.models.UserDTO;
 import com.KeyWallet.services.PasswordService;
 import com.KeyWallet.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
 import java.util.List;
 
 @RestController
@@ -21,8 +22,6 @@ public class KeyWalletController {
 
     private final PasswordService passwordService;
     private final UserService userService;
-
-    private final UserRepository userRepository;
 
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/login")
@@ -85,7 +84,6 @@ public class KeyWalletController {
         }
     }
 
-
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/encrypt")
     public ResponseEntity<CryptResponse> encryptPassword(@RequestParam String masterPassword,
@@ -101,7 +99,6 @@ public class KeyWalletController {
         }
     }
 
-
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/password/change")
     public ResponseEntity<?> chengeUserMasterPassword(@RequestBody ChangePasswordDTO changePasswordDTO){
@@ -110,7 +107,7 @@ public class KeyWalletController {
         return ResponseEntity.ok().build();
     }
 
-   @CrossOrigin(origins = "http://localhost:4200")
+    @CrossOrigin(origins = "http://localhost:4200")
     @GetMapping("/passwords/{userLogin}")
     public ResponseEntity<List<Password>> getAllPasswordsForUser(@PathVariable String userLogin){
 

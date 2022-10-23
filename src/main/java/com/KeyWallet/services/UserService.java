@@ -120,6 +120,7 @@ public class UserService {
 
 
     private void checkIfUserExists(String login) {
+
         if(userRepository.existsByLogin(login)){
             throw new UserRegisterException(ExceptionMessages.USER_ALREADY_EXIST.getCode());
         }

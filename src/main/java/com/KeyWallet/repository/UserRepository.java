@@ -12,6 +12,8 @@ public interface UserRepository extends CrudRepository<UserKW, Long> {
 
     UserKW findByLogin(String login);
 
+    void update();
+
     boolean existsByLogin(String login);
 
     @Modifying
