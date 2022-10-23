@@ -69,14 +69,17 @@ public class PasswordService {
 
         List<Password> userPasswords = passwordRepository.findAllByUserId(userId);
 
-        userPasswords.forEach(password -> {
-            Key key = aeSenc.generateKey(oldMasterPassword);
-            String userPassword = aeSenc.decrypt(password.getPassword(), key);
-            key = aeSenc.generateKey(newMasterPassword);
-            String ePassword = aeSenc.encrypt(userPassword, key);
-            passwordRepository.updatePasswordDataWithNewPassword(ePassword, userId);
-
-        });
+        userPasswords
+                .stream()
+                .map(userPassword -> {
+                    Key key = aeSenc.generateKey(oldMasterPassword);
+                    String password = aeSenc.decrypt(userPassword.getPassword(), key);
+                    return new Pair<Long, String>(userPassword.getId(), password);})
+                .forEach(pair -> {
+                    Key key = aeSenc.generateKey(newMasterPassword);
+                    String encryptedPassword = aeSenc.encrypt(pair.getRight(), key);
+                    passwordRepository.updatePasswordDataWithNewPassword(encryptedPassword, pair.getLeft());
+                });
 
     }
 
