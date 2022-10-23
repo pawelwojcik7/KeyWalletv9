@@ -15,7 +15,7 @@ public interface UserRepository extends CrudRepository<UserKW, Long> {
     boolean existsByLogin(String login);
 
     @Modifying
-    @Query("update UserDB set isPasswordKeptAsHash = :isPasswordKeptAsHash, passwordHash = :passwordHash, salt = :salt where id = :id")
+    @Query("update userKW set isPasswordKeptAsHash = :isPasswordKeptAsHash, passwordHash = :passwordHash, salt = :salt where id = :id")
     void updateUserDataWithNewPassword(
             @Param("isPasswordKeptAsHash") Boolean isPasswordKeptAsHash,
             @Param("passwordHash") String passwordHash,

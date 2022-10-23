@@ -11,4 +11,3 @@ class KeyWalletApplicationTests {
 	}
 
 }
-asd

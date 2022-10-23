@@ -90,7 +90,7 @@ public class UserService {
                     newUser.getIsPasswordKeptAsHash(),
                     newUser.getPasswordHash(),
                     newUser.getSalt(),
-                    newUser.getId()
+                    existingUser.getId()
             );
         }
         else{
@@ -99,7 +99,7 @@ public class UserService {
                     newUser.getIsPasswordKeptAsHash(),
                     newPassword,
                     newUser.getSalt(),
-                    newUser.getId()
+                    existingUser.getId()
             );
         }
 

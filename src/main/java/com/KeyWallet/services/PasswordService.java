@@ -5,12 +5,15 @@ import com.KeyWallet.entity.Password;
 import com.KeyWallet.entity.UserKW;
 import com.KeyWallet.exception.ExceptionMessages;
 import com.KeyWallet.exception.PasswordException;
+import com.KeyWallet.models.Pair;
 import com.KeyWallet.models.PasswordDTO;
 import com.KeyWallet.repository.PasswordRepository;
 import com.KeyWallet.repository.UserRepository;
-import javafx.util.Pair;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,9 +31,11 @@ public class PasswordService {
     private final AESenc aeSenc;
 
 
-    public List<Password> getPasswordsForUser(Long userId){
+    public List<Password> getPasswordsForUser(String userLogin){
 
-        return passwordRepository.findAllByUserId(userId);
+        // find user id
+        UserKW user = userRepository.findByLogin(userLogin);
+        return passwordRepository.findAllByUserId(user.getId());
     }
 
     @Transactional
@@ -60,22 +65,19 @@ public class PasswordService {
         }
     }
 
-    @Transactional
     public void changeAllPasswordsForUser(Long userId, String oldMasterPassword, String newMasterPassword){
 
         List<Password> userPasswords = passwordRepository.findAllByUserId(userId);
 
-        userPasswords
-                .stream()
-                .map(userPassword -> {
-                    Key key = aeSenc.generateKey(oldMasterPassword);
-                    String password = aeSenc.decrypt(userPassword.getPassword(), key);
-                    return new Pair<Long, String>(userPassword.getId(), password);})
-                .forEach(pair -> {
-                    Key key = aeSenc.generateKey(newMasterPassword);
-                    String encryptedPassword = aeSenc.encrypt(pair.getValue(), key);
-                    passwordRepository.updatePasswordDataWithNewPassword(encryptedPassword, pair.getKey());
-                });
+        userPasswords.forEach(password -> {
+            Key key = aeSenc.generateKey(oldMasterPassword);
+            String userPassword = aeSenc.decrypt(password.getPassword(), key);
+            key = aeSenc.generateKey(newMasterPassword);
+            String ePassword = aeSenc.encrypt(userPassword, key);
+            passwordRepository.updatePasswordDataWithNewPassword(ePassword, userId);
+
+        });
+
     }
 
     public String decryptPassword(String masterPassword, Long passId) throws PasswordException{
@@ -87,6 +89,20 @@ public class PasswordService {
             Key key = aeSenc.generateKey(masterPassword);
 
             return  aeSenc.decrypt(password.getPassword(), key);
+        }
+        else{
+            throw new PasswordException(ExceptionMessages.PASSWORD_DOES_NOT_EXIST.getCode());
+        }
+    }
+
+    public String encryptPassword(String masterPassword, Long passId) throws PasswordException{
+
+        Optional<Password> passwordOptional = passwordRepository.findById(passId);
+
+        if(passwordOptional.isPresent()){
+            Password password = passwordOptional.get();
+
+            return  password.getPassword();
         }
         else{
             throw new PasswordException(ExceptionMessages.PASSWORD_DOES_NOT_EXIST.getCode());
