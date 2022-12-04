@@ -30,6 +30,7 @@ public class UserService {
     private final AESenc aeSenc;
 
     public void loginUser(UserDTO userDTO) throws UserLogInException {
+
         UserKW userKW = userRepository.findByLogin(userDTO.getLogin());
         if(Objects.isNull(userKW)){
             throw new UserLogInException(ExceptionMessages.USER_DOES_NOT_EXIST.getCode());
