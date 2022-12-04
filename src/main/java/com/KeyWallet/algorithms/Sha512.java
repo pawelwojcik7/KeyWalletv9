@@ -22,7 +22,6 @@ public class Sha512 {
         if(salt==null){
             salt = saltProvider.generateSalt();
         }
-        //  return new UserKW(null, userDTO.getLogin(), password, salt, userDTO.getKeepPasswordAsHash());
         return new Pair<>(calculateSHA512(salt + password), salt);
     }
 
