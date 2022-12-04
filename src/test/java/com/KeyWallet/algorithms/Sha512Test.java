@@ -20,8 +20,10 @@ public class Sha512Test {
     @DataProvider(name = "testEncodeHashValueWithGivenSaltDataProvider")
     public static Object[][] parametersEncodeHashValueWithGivenSaltTest() {
         return new Object[][]{
-                {"textToTest", "Salt", "34639b8dc7146cdd533497d55bb33447fb5bcdd6cd1e702f1be7acc808570ff0f5c201ca2f4f0eeb70ea19315ebd57faa75d8a672a7010d9a84910bc41ad42fd"},
-                {"SecondText", "", "11f05da91655017ece012aac6030ce6d906b128454619b6bafbf1d1b5a821ba7acd007ca827c7446eb575d5ae0c3e864fe500b679239f9df1f520f3cbef5bd84"}};
+                {"textToTest", "Salt", "34639b8dc7146cdd533497d55bb33447fb5bcdd6cd1e702f1be7acc808570ff0f5c201ca2f4" +
+                        "f0eeb70ea19315ebd57faa75d8a672a7010d9a84910bc41ad42fd"},
+                {"SecondText", "", "11f05da91655017ece012aac6030ce6d906b128454619b6bafbf1d1b5a821ba7acd007ca827c744" +
+                        "6eb575d5ae0c3e864fe500b679239f9df1f520f3cbef5bd84"}};
     }
 
     @DataProvider(name = "testEncodeHashValueWithoutSaltDataProvider")
