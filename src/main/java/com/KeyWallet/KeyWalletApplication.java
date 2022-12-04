@@ -9,7 +9,7 @@ public class KeyWalletApplication {
 
     public static void main(String[] args) {
 
-
+        SpringApplication.run(KeyWalletApplication.class, args);
     }
 
 }
