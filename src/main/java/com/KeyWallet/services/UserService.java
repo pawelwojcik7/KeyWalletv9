@@ -8,6 +8,7 @@ import com.KeyWallet.exception.ExceptionMessages;
 import com.KeyWallet.exception.UserLogInException;
 import com.KeyWallet.exception.UserRegisterException;
 import com.KeyWallet.models.ChangePasswordDTO;
+import com.KeyWallet.models.Pair;
 import com.KeyWallet.models.UserDTO;
 import com.KeyWallet.providers.PepperProvider;
 import com.KeyWallet.repository.UserRepository;
@@ -35,7 +36,8 @@ public class UserService {
         if(Objects.isNull(userKW)){
             throw new UserLogInException(ExceptionMessages.USER_DOES_NOT_EXIST.getCode());
         }
-        UserKW probablyUser = sha512.encodeHashValue(userDTO, userKW.getSalt());
+        Pair<String, String> encryptedPasswordAndSalt = sha512.encodeHashValue(userDTO.getPassword(), userKW.getSalt());
+        UserKW probablyUser = new UserKW(null, userDTO.getLogin(), encryptedPasswordAndSalt.getLeft(), encryptedPasswordAndSalt.getRight(), userDTO.getKeepPasswordAsHash());
         if (userKW.getIsPasswordKeptAsHash()) {
             Key key = aeSenc.generateKey(pepperProvider.getPepper());
             probablyUser.setPasswordHash(aeSenc.encrypt(probablyUser.getPasswordHash(), key));
@@ -64,7 +66,8 @@ public class UserService {
 
     private void registerUserWithHashPassword(UserDTO userDTO){
 
-        UserKW userKW = sha512.encodeHashValue(userDTO, null);
+        Pair<String, String> encryptedPasswordAndSalt = sha512.encodeHashValue(userDTO.getPassword(), null);
+        UserKW userKW = new UserKW(null, userDTO.getLogin(), encryptedPasswordAndSalt.getLeft(), encryptedPasswordAndSalt.getRight(), userDTO.getKeepPasswordAsHash());
         Key key = aeSenc.generateKey(pepperProvider.getPepper());
         userKW.setPasswordHash(aeSenc.encrypt(userKW.getPasswordHash(), key));
 
@@ -82,7 +85,8 @@ public class UserService {
                 changePasswordDTO.getKeepAsHash()
         );
 
-        UserKW newUser = sha512.encodeHashValue(userDTO, null);
+        Pair<String, String> encryptedPasswordAndSalt = sha512.encodeHashValue(userDTO.getPassword(), null);
+        UserKW newUser = new UserKW(null, userDTO.getLogin(), encryptedPasswordAndSalt.getLeft(), encryptedPasswordAndSalt.getRight(), userDTO.getKeepPasswordAsHash());
 
         if(changePasswordDTO.getKeepAsHash()){
             Key key = aeSenc.generateKey(pepperProvider.getPepper());
@@ -113,7 +117,8 @@ public class UserService {
 
     private void registerUserWithoutHashPassword(UserDTO userDTO) {
 
-        UserKW userKW = sha512.encodeHashValue(userDTO, null);
+        Pair<String, String> encryptedPasswordAndSalt = sha512.encodeHashValue(userDTO.getPassword(), null);
+        UserKW userKW = new UserKW(null, userDTO.getLogin(), encryptedPasswordAndSalt.getLeft(), encryptedPasswordAndSalt.getRight(), userDTO.getKeepPasswordAsHash());
         userKW.setPasswordHash(hmac.calculateHMAC(userKW.getPasswordHash(), pepperProvider.getPepper()));
 
         userRepository.save(userKW);
