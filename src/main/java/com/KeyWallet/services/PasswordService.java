@@ -9,14 +9,12 @@ import com.KeyWallet.models.Pair;
 import com.KeyWallet.models.PasswordDTO;
 import com.KeyWallet.repository.PasswordRepository;
 import com.KeyWallet.repository.UserRepository;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.http.HttpRequest;
 import java.security.Key;
 import java.util.List;
 import java.util.Optional;
@@ -31,7 +29,7 @@ public class PasswordService {
     private final AESenc aeSenc;
 
 
-    public List<Password> getPasswordsForUser(String userLogin){
+    public List<Password> getPasswordsForUser(String userLogin) {
 
         // find user id
         UserKW user = userRepository.findByLogin(userLogin);
@@ -43,7 +41,7 @@ public class PasswordService {
 
         UserKW userKW = userRepository.findByLogin(passwordDTO.getUserDTO().getLogin());
 
-        if(userKW==null){
+        if (userKW == null) {
             throw new PasswordException(ExceptionMessages.USER_DOES_NOT_EXIST.getCode());
         }
 
@@ -65,7 +63,7 @@ public class PasswordService {
         }
     }
 
-    public void changeAllPasswordsForUser(Long userId, String oldMasterPassword, String newMasterPassword){
+    public void changeAllPasswordsForUser(Long userId, String oldMasterPassword, String newMasterPassword) {
 
         List<Password> userPasswords = passwordRepository.findAllByUserId(userId);
 
@@ -74,7 +72,8 @@ public class PasswordService {
                 .map(userPassword -> {
                     Key key = aeSenc.generateKey(oldMasterPassword);
                     String password = aeSenc.decrypt(userPassword.getPassword(), key);
-                    return new Pair<Long, String>(userPassword.getId(), password);})
+                    return new Pair<Long, String>(userPassword.getId(), password);
+                })
                 .forEach(pair -> {
                     Key key = aeSenc.generateKey(newMasterPassword);
                     String encryptedPassword = aeSenc.encrypt(pair.getRight(), key);
@@ -83,31 +82,41 @@ public class PasswordService {
 
     }
 
-    public String decryptPassword(String masterPassword, Long passId) throws PasswordException{
+
+    private HttpRequest factory(String method, String body){
+        HttpRequest request;
+        switch (method){
+            case "post": request = HttpRequest.newBuilder().POST(HttpRequest.BodyPublishers.ofString(body)).header("accept", "application/json").build();
+            break;
+            case "get": request = HttpRequest.newBuilder().GET().header("accept", "application/json").build();
+            default: request = HttpRequest.newBuilder().GET().header("accept", "application/json").build();
+        }
+        return request;
+    }
+
+    public String decryptPassword(String masterPassword, Long passId) throws PasswordException {
 
         Optional<Password> passwordOptional = passwordRepository.findById(passId);
 
-        if(passwordOptional.isPresent()){
+        if (passwordOptional.isPresent()) {
             Password password = passwordOptional.get();
             Key key = aeSenc.generateKey(masterPassword);
 
-            return  aeSenc.decrypt(password.getPassword(), key);
-        }
-        else{
+            return aeSenc.decrypt(password.getPassword(), key);
+        } else {
             throw new PasswordException(ExceptionMessages.PASSWORD_DOES_NOT_EXIST.getCode());
         }
     }
 
-    public String encryptPassword(String masterPassword, Long passId) throws PasswordException{
+    public String encryptPassword(String masterPassword, Long passId) throws PasswordException {
 
         Optional<Password> passwordOptional = passwordRepository.findById(passId);
 
-        if(passwordOptional.isPresent()){
+        if (passwordOptional.isPresent()) {
             Password password = passwordOptional.get();
 
-            return  password.getPassword();
-        }
-        else{
+            return password.getPassword();
+        } else {
             throw new PasswordException(ExceptionMessages.PASSWORD_DOES_NOT_EXIST.getCode());
         }
     }

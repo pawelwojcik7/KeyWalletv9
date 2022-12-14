@@ -1,6 +1,9 @@
 package com.KeyWallet.entity;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
 
@@ -13,23 +16,23 @@ import javax.persistence.*;
 public class Password {
 
     @Id
-    @Column(name="id")
+    @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name="password", nullable = false)
+    @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name="id_user", nullable = false)
+    @Column(name = "id_user", nullable = false)
     private Long userId;
 
-    @Column(name="web_address")
+    @Column(name = "web_address")
     private String webAddress;
 
-    @Column(name="description")
+    @Column(name = "description")
     private String description;
 
-    @Column(name="login", length = 30)
+    @Column(name = "login", length = 30)
     private String login;
 
 }

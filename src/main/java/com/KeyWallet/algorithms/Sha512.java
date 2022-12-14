@@ -1,8 +1,6 @@
 package com.KeyWallet.algorithms;
 
-import com.KeyWallet.entity.UserKW;
 import com.KeyWallet.models.Pair;
-import com.KeyWallet.models.UserDTO;
 import com.KeyWallet.providers.SaltProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -19,7 +17,7 @@ public class Sha512 {
 
     public Pair<String, String> encodeHashValue(String password, String salt) {
 
-        if(salt==null){
+        if (salt == null) {
             salt = saltProvider.generateSalt();
         }
         return new Pair<>(calculateSHA512(salt + password), salt);

@@ -33,7 +33,7 @@ public class UserService {
     public void loginUser(UserDTO userDTO) throws UserLogInException {
 
         UserKW userKW = userRepository.findByLogin(userDTO.getLogin());
-        if(Objects.isNull(userKW)){
+        if (Objects.isNull(userKW)) {
             throw new UserLogInException(ExceptionMessages.USER_DOES_NOT_EXIST.getCode());
         }
         Pair<String, String> encryptedPasswordAndSalt = sha512.encodeHashValue(userDTO.getPassword(), userKW.getSalt());
@@ -57,14 +57,14 @@ public class UserService {
     public void registerUser(UserDTO userDTO) {
 
         checkIfUserExists(userDTO.getLogin());
-        if(userDTO.getKeepPasswordAsHash()){
+        if (userDTO.getKeepPasswordAsHash()) {
             registerUserWithHashPassword(userDTO);
         } else {
             registerUserWithoutHashPassword(userDTO);
         }
     }
 
-    private void registerUserWithHashPassword(UserDTO userDTO){
+    private void registerUserWithHashPassword(UserDTO userDTO) {
 
         Pair<String, String> encryptedPasswordAndSalt = sha512.encodeHashValue(userDTO.getPassword(), null);
         UserKW userKW = new UserKW(null, userDTO.getLogin(), encryptedPasswordAndSalt.getLeft(), encryptedPasswordAndSalt.getRight(), userDTO.getKeepPasswordAsHash());
@@ -75,7 +75,7 @@ public class UserService {
     }
 
     @Transactional
-    public void changeMasterPassword(ChangePasswordDTO changePasswordDTO){
+    public void changeMasterPassword(ChangePasswordDTO changePasswordDTO) {
 
         UserKW existingUser = userRepository.findByLogin(changePasswordDTO.getLogin());
 
@@ -88,17 +88,16 @@ public class UserService {
         Pair<String, String> encryptedPasswordAndSalt = sha512.encodeHashValue(userDTO.getPassword(), null);
         UserKW newUser = new UserKW(null, userDTO.getLogin(), encryptedPasswordAndSalt.getLeft(), encryptedPasswordAndSalt.getRight(), userDTO.getKeepPasswordAsHash());
 
-        if(changePasswordDTO.getKeepAsHash()){
+        if (changePasswordDTO.getKeepAsHash()) {
             Key key = aeSenc.generateKey(pepperProvider.getPepper());
-            newUser.setPasswordHash(aeSenc.encrypt(newUser.getPasswordHash(),key));
+            newUser.setPasswordHash(aeSenc.encrypt(newUser.getPasswordHash(), key));
             userRepository.updateUserDataWithNewPassword(
                     newUser.getIsPasswordKeptAsHash(),
                     newUser.getPasswordHash(),
                     newUser.getSalt(),
                     existingUser.getId()
             );
-        }
-        else{
+        } else {
             String newPassword = hmac.calculateHMAC(newUser.getPasswordHash(), pepperProvider.getPepper());
             userRepository.updateUserDataWithNewPassword(
                     newUser.getIsPasswordKeptAsHash(),
@@ -127,7 +126,7 @@ public class UserService {
 
     private void checkIfUserExists(String login) {
 
-        if(userRepository.existsByLogin(login)){
+        if (userRepository.existsByLogin(login)) {
             throw new UserRegisterException(ExceptionMessages.USER_ALREADY_EXIST.getCode());
         }
 

@@ -25,13 +25,11 @@ public class KeyWalletController {
 
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody UserDTO user){
+    public ResponseEntity<?> loginUser(@RequestBody UserDTO user) {
 
-        try{
+        try {
             userService.loginUser(user);
-        }
-        catch (UserLogInException e)
-        {
+        } catch (UserLogInException e) {
 
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -41,13 +39,11 @@ public class KeyWalletController {
 
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody UserDTO user){
+    public ResponseEntity<?> registerUser(@RequestBody UserDTO user) {
 
-        try{
+        try {
             userService.registerUser(user);
-        }
-        catch (UserRegisterException e)
-        {
+        } catch (UserRegisterException e) {
 
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -57,7 +53,7 @@ public class KeyWalletController {
 
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/add-password")
-    public ResponseEntity<?> addPassword(@RequestBody PasswordDTO passwordDTO){
+    public ResponseEntity<?> addPassword(@RequestBody PasswordDTO passwordDTO) {
 
         try {
             passwordService.addPassword(passwordDTO);
@@ -101,7 +97,7 @@ public class KeyWalletController {
 
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/password/change")
-    public ResponseEntity<?> chengeUserMasterPassword(@RequestBody ChangePasswordDTO changePasswordDTO){
+    public ResponseEntity<?> chengeUserMasterPassword(@RequestBody ChangePasswordDTO changePasswordDTO) {
 
         userService.changeMasterPassword(changePasswordDTO);
         return ResponseEntity.ok().build();
@@ -109,9 +105,16 @@ public class KeyWalletController {
 
     @CrossOrigin(origins = "http://localhost:4200")
     @GetMapping("/passwords/{userLogin}")
-    public ResponseEntity<List<Password>> getAllPasswordsForUser(@PathVariable String userLogin){
+    public ResponseEntity<List<Password>> getAllPasswordsForUser(@PathVariable String userLogin) {
 
         return ResponseEntity.ok(passwordService.getPasswordsForUser(userLogin));
+    }
+
+    @GetMapping("/testget") // TODO : nie jest to do aplikacji potrzebne, endpoint na potrzeby innej aplikacji
+    public ResponseEntity<String> test() {
+
+        System.out.println("przyszło");
+        return ResponseEntity.ok("wrocilo");
     }
 
 }

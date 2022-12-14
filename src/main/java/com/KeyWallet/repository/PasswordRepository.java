@@ -13,6 +13,7 @@ import java.util.List;
 public interface PasswordRepository extends CrudRepository<Password, Long> {
 
     List<Password> findAllByUserId(Long id);
+
     @Modifying
     @Query("update password set password = :password where id = :id")
     void updatePasswordDataWithNewPassword(

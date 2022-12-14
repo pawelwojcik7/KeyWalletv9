@@ -17,7 +17,7 @@ public class AESenc {
     private static final String ALGO = "AES";
 
     @SneakyThrows
-    public String encrypt(String data, Key key){
+    public String encrypt(String data, Key key) {
 
         Cipher c = Cipher.getInstance(ALGO);
         c.init(Cipher.ENCRYPT_MODE, key);
@@ -27,7 +27,7 @@ public class AESenc {
     }
 
     @SneakyThrows
-    public String decrypt(String encryptedData, Key key){
+    public String decrypt(String encryptedData, Key key) {
 
         Cipher c = Cipher.getInstance(ALGO);
         c.init(Cipher.DECRYPT_MODE, key);
@@ -37,7 +37,7 @@ public class AESenc {
         return new String(decValue);
     }
 
-    public Key generateKey(String password){
+    public Key generateKey(String password) {
 
         return new SecretKeySpec(md5.calculateMD5(password), ALGO);
     }
