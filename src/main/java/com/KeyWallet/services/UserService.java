@@ -8,6 +8,7 @@ import com.KeyWallet.exception.ExceptionMessages;
 import com.KeyWallet.exception.UserLogInException;
 import com.KeyWallet.exception.UserRegisterException;
 import com.KeyWallet.models.ChangePasswordDTO;
+import com.KeyWallet.models.LoginResult;
 import com.KeyWallet.models.Pair;
 import com.KeyWallet.models.UserDTO;
 import com.KeyWallet.providers.PepperProvider;
@@ -30,27 +31,42 @@ public class UserService {
     private final Sha512 sha512;
     private final AESenc aeSenc;
 
-    public void loginUser(UserDTO userDTO) throws UserLogInException {
+    private final LoginHistoryService historyService;
+    private final IpLoginHistoryService ipLoginHistoryService;
+
+    public void loginUser(UserDTO userDTO, String sessionId, String ipAddress) throws UserLogInException {
 
         UserKW userKW = userRepository.findByLogin(userDTO.getLogin());
         if (Objects.isNull(userKW)) {
             throw new UserLogInException(ExceptionMessages.USER_DOES_NOT_EXIST.getCode());
         }
+
+        historyService.checkUserLoginAttemptCount(userKW);
+        ipLoginHistoryService.checkIpLoginAttemptCount(ipAddress);
+
         Pair<String, String> encryptedPasswordAndSalt = sha512.encodeHashValue(userDTO.getPassword(), userKW.getSalt());
         UserKW probablyUser = new UserKW(null, userDTO.getLogin(), encryptedPasswordAndSalt.getLeft(), encryptedPasswordAndSalt.getRight(), userDTO.getKeepPasswordAsHash());
         if (userKW.getIsPasswordKeptAsHash()) {
             Key key = aeSenc.generateKey(pepperProvider.getPepper());
             probablyUser.setPasswordHash(aeSenc.encrypt(probablyUser.getPasswordHash(), key));
             if (!userKW.getPasswordHash().equals(probablyUser.getPasswordHash())) {
-
+                historyService.storeLoginAttempt(userKW, LoginResult.FAILURE);
+                ipLoginHistoryService.storeIpLoginData(ipAddress, LoginResult.FAILURE);
                 throw new UserLogInException(ExceptionMessages.WRONG_PASSWORD.getCode());
+
             }
         } else {
             String hmacCodedIncomingUserPassword = hmac.calculateHMAC(probablyUser.getPasswordHash(), pepperProvider.getPepper());
             if (!userKW.getPasswordHash().equals(hmacCodedIncomingUserPassword)) {
+
+                historyService.storeLoginAttempt(userKW, LoginResult.FAILURE);
+                ipLoginHistoryService.storeIpLoginData(ipAddress, LoginResult.FAILURE);
                 throw new UserLogInException(ExceptionMessages.WRONG_PASSWORD.getCode());
             }
         }
+
+        ipLoginHistoryService.storeIpLoginData(ipAddress, LoginResult.SUCCESS);
+        historyService.storeLoginAttempt(userKW, LoginResult.SUCCESS);
     }
 
     @Transactional
@@ -62,6 +78,15 @@ public class UserService {
         } else {
             registerUserWithoutHashPassword(userDTO);
         }
+    }
+
+    private void registerUserWithoutHashPassword(UserDTO userDTO) {
+
+        Pair<String, String> encryptedPasswordAndSalt = sha512.encodeHashValue(userDTO.getPassword(), null);
+        UserKW userKW = new UserKW(null, userDTO.getLogin(), encryptedPasswordAndSalt.getLeft(), encryptedPasswordAndSalt.getRight(), userDTO.getKeepPasswordAsHash());
+        userKW.setPasswordHash(hmac.calculateHMAC(userKW.getPasswordHash(), pepperProvider.getPepper()));
+
+        userRepository.save(userKW);
     }
 
     private void registerUserWithHashPassword(UserDTO userDTO) {
@@ -79,11 +104,7 @@ public class UserService {
 
         UserKW existingUser = userRepository.findByLogin(changePasswordDTO.getLogin());
 
-        UserDTO userDTO = new UserDTO(
-                changePasswordDTO.getLogin(),
-                changePasswordDTO.getNewPassword(),
-                changePasswordDTO.getKeepAsHash()
-        );
+        UserDTO userDTO = new UserDTO(changePasswordDTO.getLogin(), changePasswordDTO.getNewPassword(), changePasswordDTO.getKeepAsHash());
 
         Pair<String, String> encryptedPasswordAndSalt = sha512.encodeHashValue(userDTO.getPassword(), null);
         UserKW newUser = new UserKW(null, userDTO.getLogin(), encryptedPasswordAndSalt.getLeft(), encryptedPasswordAndSalt.getRight(), userDTO.getKeepPasswordAsHash());
@@ -91,36 +112,14 @@ public class UserService {
         if (changePasswordDTO.getKeepAsHash()) {
             Key key = aeSenc.generateKey(pepperProvider.getPepper());
             newUser.setPasswordHash(aeSenc.encrypt(newUser.getPasswordHash(), key));
-            userRepository.updateUserDataWithNewPassword(
-                    newUser.getIsPasswordKeptAsHash(),
-                    newUser.getPasswordHash(),
-                    newUser.getSalt(),
-                    existingUser.getId()
-            );
+            userRepository.updateUserDataWithNewPassword(newUser.getIsPasswordKeptAsHash(), newUser.getPasswordHash(), newUser.getSalt(), existingUser.getId());
         } else {
             String newPassword = hmac.calculateHMAC(newUser.getPasswordHash(), pepperProvider.getPepper());
-            userRepository.updateUserDataWithNewPassword(
-                    newUser.getIsPasswordKeptAsHash(),
-                    newPassword,
-                    newUser.getSalt(),
-                    existingUser.getId()
-            );
+            userRepository.updateUserDataWithNewPassword(newUser.getIsPasswordKeptAsHash(), newPassword, newUser.getSalt(), existingUser.getId());
         }
 
-        passwordService.changeAllPasswordsForUser(
-                existingUser.getId(),
-                changePasswordDTO.getOldPassword(),
-                changePasswordDTO.getNewPassword());
+        passwordService.changeAllPasswordsForUser(existingUser.getId(), changePasswordDTO.getOldPassword(), changePasswordDTO.getNewPassword());
 
-    }
-
-    private void registerUserWithoutHashPassword(UserDTO userDTO) {
-
-        Pair<String, String> encryptedPasswordAndSalt = sha512.encodeHashValue(userDTO.getPassword(), null);
-        UserKW userKW = new UserKW(null, userDTO.getLogin(), encryptedPasswordAndSalt.getLeft(), encryptedPasswordAndSalt.getRight(), userDTO.getKeepPasswordAsHash());
-        userKW.setPasswordHash(hmac.calculateHMAC(userKW.getPasswordHash(), pepperProvider.getPepper()));
-
-        userRepository.save(userKW);
     }
 
 
