@@ -26,13 +26,10 @@ public class UserLogin {
     private OffsetDateTime time;
 
     @Column(name = "correct", nullable = false)
-    private Integer correct;
+    private Boolean correct;
 
     @Column(name = "id_user", nullable = false, length = 11)
     private Long idUser;
-
-    @Column(name = "computer")
-    private String computer;
 
     @Column(name = "session")
     private String session;

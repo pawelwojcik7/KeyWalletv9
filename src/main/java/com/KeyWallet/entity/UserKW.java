@@ -57,7 +57,7 @@ public class UserKW {
     private byte[] sessionId;
 
     @Column(name = "status")
-    private UserStatus Status;
+    private UserStatus status;
 
     public UserKW(Long id, String login, String passwordHash, String salt, Boolean isPasswordKeptAsHash) {
         this.id = id;

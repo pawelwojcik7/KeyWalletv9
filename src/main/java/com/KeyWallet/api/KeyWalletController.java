@@ -1,21 +1,34 @@
 package com.KeyWallet.api;
 
 import com.KeyWallet.entity.Password;
-import com.KeyWallet.exception.PasswordException;
-import com.KeyWallet.exception.SmsCodeException;
-import com.KeyWallet.exception.UserLogInException;
-import com.KeyWallet.exception.UserRegisterException;
+import com.KeyWallet.exception.*;
 import com.KeyWallet.models.*;
 import com.KeyWallet.services.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
 public class KeyWalletController {
+
+
+    @SuppressWarnings("ConstantConditions")
+    protected String fetchClientIpAddr() {
+        HttpServletRequest request = ((ServletRequestAttributes) (RequestContextHolder.getRequestAttributes())).getRequest();
+        String ip = Optional.ofNullable(request.getHeader("X-FORWARDED-FOR")).orElse(request.getRemoteAddr());
+        if (ip.equals("0:0:0:0:0:0:0:1")) ip = "127.0.0.1";
+        Assert.isTrue(ip.chars().filter($ -> $ == '.').count() == 3, "Illegal IP: " + ip);
+        return ip;
+    }
 
     private final PasswordService passwordService;
     private final UserRegisterService userRegisterService;
@@ -27,16 +40,16 @@ public class KeyWalletController {
 
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody UserDTO user) {
+    public ResponseEntity<?> loginUser(@RequestBody UserDTO user, HttpSession session) {
 
         try {
-            userLoginService.loginUser(user);
-        } catch (UserLogInException e) {
+            userLoginService.loginUser(user, session, fetchClientIpAddr());
+            return ResponseEntity.ok().build();
+        } catch (UserLogInException | IpAddressException e) {
 
             return ResponseEntity.badRequest().body(e.getMessage());
         }
 
-        return ResponseEntity.ok().build();
     }
 
     @CrossOrigin(origins = "http://localhost:4200")
