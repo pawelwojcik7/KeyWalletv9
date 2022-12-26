@@ -1,5 +1,6 @@
 package com.KeyWallet.entity;
 
+import com.KeyWallet.models.UserStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -37,7 +38,7 @@ public class UserKW {
     private Boolean isPasswordKeptAsHash;
 
     @Column(name = "sms_code", length = 6)
-    private String smsCode;
+    private Integer smsCode;
 
     @Column(name = "code_timelife")
     private OffsetDateTime codeTimeLife;
@@ -55,8 +56,8 @@ public class UserKW {
     @Column(name = "session_id")
     private byte[] sessionId;
 
-    @Column(name = "id_status")
-    private Long idStatus;
+    @Column(name = "status")
+    private UserStatus Status;
 
     public UserKW(Long id, String login, String passwordHash, String salt, Boolean isPasswordKeptAsHash) {
         this.id = id;

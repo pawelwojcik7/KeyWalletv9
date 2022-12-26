@@ -31,6 +31,4 @@ public class IncorrectLogins {
     @Column(name = "id_address", nullable = false)
     private BigInteger idAddress;
 
-    @Column(name = "computer")
-    private String computer;
 }
