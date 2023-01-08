@@ -82,18 +82,6 @@ public class PasswordService {
 
     }
 
-
-    private HttpRequest factory(String method, String body){
-        HttpRequest request;
-        switch (method){
-            case "post": request = HttpRequest.newBuilder().POST(HttpRequest.BodyPublishers.ofString(body)).header("accept", "application/json").build();
-            break;
-            case "get": request = HttpRequest.newBuilder().GET().header("accept", "application/json").build();
-            default: request = HttpRequest.newBuilder().GET().header("accept", "application/json").build();
-        }
-        return request;
-    }
-
     public String decryptPassword(String masterPassword, Long passId) throws PasswordException {
 
         Optional<Password> passwordOptional = passwordRepository.findById(passId);

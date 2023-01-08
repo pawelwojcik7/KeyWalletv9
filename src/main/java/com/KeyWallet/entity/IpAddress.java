@@ -23,7 +23,7 @@ public class IpAddress {
     private Long id;
 
     @Column(name = "ok_login_num", nullable = false)
-    private BigInteger okLoginNum;
+    private Integer okLoginNum;
 
     @Column(name = "bad_login_num", nullable = false)
     private Integer badLoginNum;
@@ -32,12 +32,12 @@ public class IpAddress {
     private Integer lastBadLoginNum;
 
     @Column(name = "permanent_lock", nullable = false)
-    private Integer permanentLock;
+    private Boolean permanentLock;
 
     @Column(name = "temp_lock")
     private OffsetDateTime tempLock;
 
-    @Column(name = "ip_address", nullable = false)
+    @Column(name = "ipAddress", nullable = false)
     private String ipAddress;
 
 }

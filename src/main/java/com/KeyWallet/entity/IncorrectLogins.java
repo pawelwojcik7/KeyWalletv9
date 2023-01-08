@@ -29,8 +29,6 @@ public class IncorrectLogins {
     private String sessionId;
 
     @Column(name = "id_address", nullable = false)
-    private BigInteger idAddress;
+    private Long idAddress;
 
-    @Column(name = "computer")
-    private String computer;
 }
