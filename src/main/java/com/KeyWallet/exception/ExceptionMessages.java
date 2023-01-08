@@ -20,7 +20,9 @@ public enum ExceptionMessages {
 
     NEW_TEMP_BLOCK_IP_ADDRESS("The ip address has been blocked to: "),
 
-    WRONG_PASSWORD_FORMAT("Wrong password format");
+    WRONG_PASSWORD_FORMAT("Wrong password format"),
+
+    USER_BLOCKED("User is blocked until: ");
 
 
     @Getter

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.security.Key;
+import java.time.OffsetDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -79,7 +80,8 @@ public class UserRegisterService {
                 userDTO.getLogin(),
                 encryptedPasswordAndSalt.getLeft(),
                 encryptedPasswordAndSalt.getRight(),
-                userDTO.getKeepPasswordAsHash()
+                userDTO.getKeepPasswordAsHash(),
+                OffsetDateTime.now()
         );
     }
 

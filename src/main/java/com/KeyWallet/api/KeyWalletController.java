@@ -33,7 +33,7 @@ public class KeyWalletController {
     private final PasswordService passwordService;
     private final UserRegisterService userRegisterService;
 
-    private final UserLoginService userLoginService;
+    private final UserService userService;
 
     private final MasterPasswordService masterPasswordService;
     private final SmsCodeService smsCodeService;
@@ -43,7 +43,7 @@ public class KeyWalletController {
     public ResponseEntity<?> loginUser(@RequestBody UserDTO user, HttpSession session) {
 
         try {
-            userLoginService.loginUser(user, session, fetchClientIpAddr());
+            userService.loginUser(user, session, fetchClientIpAddr());
             return ResponseEntity.ok().build();
         } catch (UserLogInException | IpAddressException e) {
 

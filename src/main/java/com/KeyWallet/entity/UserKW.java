@@ -59,11 +59,12 @@ public class UserKW {
     @Column(name = "status")
     private UserStatus status;
 
-    public UserKW(Long id, String login, String passwordHash, String salt, Boolean isPasswordKeptAsHash) {
+    public UserKW(Long id, String login, String passwordHash, String salt, Boolean isPasswordKeptAsHash, OffsetDateTime lockoutTime) {
         this.id = id;
         this.login = login;
         this.passwordHash = passwordHash;
         this.salt = salt;
         this.isPasswordKeptAsHash = isPasswordKeptAsHash;
+        this.lockoutTime=lockoutTime;
     }
 }

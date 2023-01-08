@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.security.Key;
+import java.time.OffsetDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +39,7 @@ public class MasterPasswordService {
         );
 
         Pair<String, String> encryptedPasswordAndSalt = sha512.encodeHashValue(userDTO.getPassword(), null);
-        UserKW newUser = new UserKW(null, userDTO.getLogin(), encryptedPasswordAndSalt.getLeft(), encryptedPasswordAndSalt.getRight(), userDTO.getKeepPasswordAsHash());
+        UserKW newUser = new UserKW(null, userDTO.getLogin(), encryptedPasswordAndSalt.getLeft(), encryptedPasswordAndSalt.getRight(), userDTO.getKeepPasswordAsHash(), OffsetDateTime.now());
 
         if (changePasswordDTO.getKeepAsHash()) {
             Key key = aeSenc.generateKey(pepperProvider.getPepper());

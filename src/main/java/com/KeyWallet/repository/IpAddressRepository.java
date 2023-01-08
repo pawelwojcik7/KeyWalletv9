@@ -13,7 +13,7 @@ import java.time.OffsetDateTime;
 public interface IpAddressRepository extends CrudRepository<IpAddress, Long> {
 
 
-    IpAddress findByIpAddressAndUserId(String ipAddress, Long userId);
+    IpAddress findByIpAddress(String ipAddress);
 
     @Modifying
     @Query("update ip_address set badLoginNum = :badLoginNum where id = :id")

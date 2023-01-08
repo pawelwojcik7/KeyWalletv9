@@ -39,4 +39,10 @@ public interface UserRepository extends CrudRepository<UserKW, Long> {
             @Param("status") UserStatus status,
             @Param("login") String login);
 
+    @Modifying
+    @Query("update userKW set lockoutTime= :lockoutTime where id = :id")
+    void updateUserDataWithTempLock(
+            @Param("lockoutTime") OffsetDateTime lockoutTime,
+            @Param("id") Long id);
+
 }

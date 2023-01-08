@@ -37,9 +37,6 @@ public class IpAddress {
     @Column(name = "temp_lock")
     private OffsetDateTime tempLock;
 
-    @Column(name="userId", nullable = false)
-    private Long userId;
-
     @Column(name = "ipAddress", nullable = false)
     private String ipAddress;
 

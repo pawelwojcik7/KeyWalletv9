@@ -35,7 +35,7 @@ public class UserLogin {
     private String session;
 
     @Column(name = "id_address", nullable = false)
-    private BigInteger idAddress;
+    private Long idAddress;
 
 }
 

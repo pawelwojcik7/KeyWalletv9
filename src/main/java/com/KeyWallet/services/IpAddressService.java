@@ -22,24 +22,31 @@ public class IpAddressService {
     private final IncorrectLoginsRepository incorrectLoginsRepository;
 
 
-    public void checkIfIpAddressIsNotBlockedForUser(String ipAddress, Long userId) throws IpAddressException {
+    public Long getIpAddressIdByIpAddress(String ipAddress){
+       return ipAddressRepository.findByIpAddress(ipAddress).getId();
+    }
 
-        IpAddress ipAddressObject = ipAddressRepository.findByIpAddressAndUserId(ipAddress, userId);
+    @Transactional(dontRollbackOn = IpAddressException.class)
+    public void checkIfIpAddressIsNotBlocked(String ipAddress) throws IpAddressException {
+
+        IpAddress ipAddressObject = ipAddressRepository.findByIpAddress(ipAddress);
         if (Objects.isNull(ipAddressObject)) {
             return;
         }
         if (ipAddressObject.getPermanentLock()) {
+
             throw new IpAddressException(ExceptionMessages.PERMANENT_BLOCK_IP_ADDRESS.getCode());
         }
         if (ipAddressObject.getTempLock().isAfter(OffsetDateTime.now())) {
+
             throw new IpAddressException(ExceptionMessages.TEMP_BLOCK_IP_ADDRESS.getCode() + ipAddressObject.getTempLock());
         }
     }
 
     @Transactional
-    public void goodLoginFromIp(String ipAddress, String sessionId, Long userId) {
+    public void goodLoginFromIp(String ipAddress, String sessionId) {
 
-        IpAddress ipAddressObject = ipAddressRepository.findByIpAddressAndUserId(ipAddress, userId); // sprawdzamy czy istnieje w bazie
+        IpAddress ipAddressObject = ipAddressRepository.findByIpAddress(ipAddress); // sprawdzamy czy istnieje w bazie
         if (Objects.isNull(ipAddressObject)) { // jeżeli nie istnieje
 
             IpAddress ipAddressObject1 = new IpAddress( // tworzymy nowy rekord
@@ -49,7 +56,6 @@ public class IpAddressService {
                     0,
                     false,
                     OffsetDateTime.now(),
-                    userId,
                     ipAddress);
 
             ipAddressRepository.save(ipAddressObject1); // zapisujemy nowy rekord
@@ -62,9 +68,9 @@ public class IpAddressService {
     }
 
     @Transactional(dontRollbackOn = IpAddressException.class)
-    public void badLoginFromIp(String ipAddress, String sessionId, Long userId) throws IpAddressException {
+    public void badLoginFromIp(String ipAddress, String sessionId) throws IpAddressException {
 
-        IpAddress ipAddressObject = ipAddressRepository.findByIpAddressAndUserId(ipAddress, userId); // sprawdzamy czy istnieje w bazie
+        IpAddress ipAddressObject = ipAddressRepository.findByIpAddress(ipAddress); // sprawdzamy czy istnieje w bazie
 
         if (Objects.isNull(ipAddressObject)) { // jeżeli nie istnieje
 
@@ -75,15 +81,14 @@ public class IpAddressService {
                     1,
                     false,
                     OffsetDateTime.now(),
-                    userId,
                     ipAddress)); // zapisujemy nowy rekord
 
-            IpAddress forId = ipAddressRepository.findByIpAddressAndUserId(ipAddress, userId); // wyciagamy ponownie nowy rekord dla id
+            IpAddress forId = ipAddressRepository.findByIpAddress(ipAddress); // wyciagamy ponownie nowy rekord dla id
             saveNewIncorrectLogin(forId.getId(), sessionId);  // zapisujemy nowy rekord incorrectLogin
 
         } else { // jezeli rekord o danym ip istnieje w bazie danych
 
-            if (ipAddressObject.getLastBadLoginNum() >= 4) { // jezeli 4 zlych logowan z ip -> blokujemy address
+            if (ipAddressObject.getLastBadLoginNum() >= 10) { // jezeli 10 zlych logowan z ip -> blokujemy address
 
                 setPermanentLock(ipAddressObject.getId()); // ustawiamy w bazie ze adress zablokowany
                 updateLastBadLoginNum(ipAddressObject.getLastBadLoginNum() + 1, ipAddressObject.getId()); // zwiekszamy liczbe ostatnich logowan
@@ -93,22 +98,24 @@ public class IpAddressService {
                 throw new IpAddressException(ExceptionMessages.NEW_PERMANENT_BLOCK_IP_ADDRESS.getCode()); // wyrzucamy wyjątek że addres został zablokowany
             }
 
-            if (ipAddressObject.getLastBadLoginNum() >= 3) {
+            if (ipAddressObject.getLastBadLoginNum() >= 8) {
 
                 OffsetDateTime newTempBlock = OffsetDateTime.now().plus(Duration.ofSeconds(10)); // nowy czas blokady
                 updateTempLock(newTempBlock, ipAddressObject.getId()); // update nowego czasu tymczasowej blokady
                 updateLastBadLoginNum(ipAddressObject.getLastBadLoginNum() + 1, ipAddressObject.getId());
                 updateBadLoginNum(ipAddressObject.getBadLoginNum() + 1, ipAddressObject.getId());
+                saveNewIncorrectLogin(ipAddressObject.getId(), sessionId); // zapisujemy nowy rekord incorrectLogin
 
                 throw new IpAddressException(ExceptionMessages.NEW_TEMP_BLOCK_IP_ADDRESS.getCode() + newTempBlock.toString());
 
             }
-            if (ipAddressObject.getLastBadLoginNum() >= 2) {
+            if (ipAddressObject.getLastBadLoginNum() >= 6) {
 
                 OffsetDateTime newTempBlock = OffsetDateTime.now().plus(Duration.ofSeconds(5)); // nowy czas blokady
                 updateTempLock(newTempBlock, ipAddressObject.getId()); // update nowego czasu tymczasowej blokady
                 updateLastBadLoginNum(ipAddressObject.getLastBadLoginNum() + 1, ipAddressObject.getId());
                 updateBadLoginNum(ipAddressObject.getBadLoginNum() + 1, ipAddressObject.getId());
+                saveNewIncorrectLogin(ipAddressObject.getId(), sessionId); // zapisujemy nowy rekord incorrectLogin
 
                 throw new IpAddressException(ExceptionMessages.NEW_TEMP_BLOCK_IP_ADDRESS.getCode() + newTempBlock.toString());
 
@@ -117,6 +124,7 @@ public class IpAddressService {
             // jeżeli ipAddres nie łapie się do całościowej blokady ani do tymczasowej
             updateLastBadLoginNum(ipAddressObject.getLastBadLoginNum() + 1, ipAddressObject.getId());
             updateBadLoginNum(ipAddressObject.getBadLoginNum() + 1, ipAddressObject.getId());
+            saveNewIncorrectLogin(ipAddressObject.getId(), sessionId); // zapisujemy nowy rekord incorrectLogin
 
         }
 
