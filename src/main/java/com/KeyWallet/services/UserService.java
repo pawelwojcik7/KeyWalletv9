@@ -47,7 +47,7 @@ public class UserService {
             ipAddressService.badLoginFromIp(ipAddress, session.getId()); // rejestrujemy bad login z tego ip / przy odpowiedniej ilosci prób rzucamy wyjatek
             throw new UserLogInException(ExceptionMessages.USER_DOES_NOT_EXIST.getCode()); // wyjaek
         }
-        check(userKW.getId(), session, ipAddress);
+        //check(userKW.getId(), session, ipAddress);
         Pair<String, String> encryptedPasswordAndSalt = sha512.encodeHashValue(userDTO.getPassword(), userKW.getSalt());
         UserKW probablyUser = new UserKW(
                 null, userDTO.getLogin(), encryptedPasswordAndSalt.getLeft(),
@@ -76,9 +76,10 @@ public class UserService {
 
     @Transactional(dontRollbackOn = {UserLogInException.class, IpAddressException.class})
     public void check(Long userId, HttpSession session, String ipAddress) throws UserLogInException {
+
         Optional<UserKW> optUser = userRepository.findById(userId);
 
-        if (optUser.get().getLockoutTime().isAfter(OffsetDateTime.now())) {
+        if (optUser.get().getLockoutTime().isAfter(OffsetDateTime.now())) { // TODO : tu pluje nullem
             userLoginService.registerBadLogin(userId, session, ipAddress);
             throw new UserLogInException(ExceptionMessages.USER_BLOCKED.getCode() + optUser.get().getLockoutTime());
         }

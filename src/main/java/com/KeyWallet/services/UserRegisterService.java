@@ -32,7 +32,7 @@ public class UserRegisterService {
     public void registerUser(UserDTO userDTO) {
 
         checkIfUserExists(userDTO.getLogin());
-        checkUserPassword(userDTO.getPassword());
+        //checkUserPassword(userDTO.getPassword());
 
         if (userDTO.getKeepPasswordAsHash()) {
             registerUserWithHashPassword(userDTO);

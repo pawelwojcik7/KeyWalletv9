@@ -1,5 +1,6 @@
 package com.KeyWallet.entity;
 
+import com.KeyWallet.models.PasswordType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,13 +27,20 @@ public class Password {
     @Column(name = "id_user", nullable = false)
     private Long userId;
 
-    @Column(name = "web_address")
-    private String webAddress;
+    @Column(name = "parent_password_id", nullable = true)
+    private Long parentPasswordId;
+
+    @Column(name = "url")
+    private String url;
 
     @Column(name = "description")
     private String description;
 
     @Column(name = "login", length = 30)
     private String login;
+
+    @Column(name = "type", nullable = false)
+    private PasswordType type;
+
 
 }
