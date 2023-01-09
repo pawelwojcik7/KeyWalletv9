@@ -38,6 +38,8 @@ public class KeyWalletController {
     private final MasterPasswordService masterPasswordService;
     private final SmsCodeService smsCodeService;
 
+
+
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody UserDTO user, HttpSession session) {
@@ -151,6 +153,32 @@ public class KeyWalletController {
     public ResponseEntity<List<Password>> getAllPasswordsForUser(@PathVariable String userLogin) {
 
         return ResponseEntity.ok(passwordService.getPasswordsForUser(userLogin));
+    }
+
+    @CrossOrigin(origins = "http://localhost:4200")
+    @PostMapping("/password/share")
+    public ResponseEntity<?> chengeUserMasterPassword(@RequestBody SharePasswordDTO body) {
+
+        try {
+            passwordService.sharePassword(body);
+        } catch (SharePasswordException e)
+        {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    @CrossOrigin(origins = "http://localhost:4200")
+    @DeleteMapping ("/password/{id}")
+    public ResponseEntity<?> deletePassword( @PathVariable Long id) {
+
+        try {
+            passwordService.deletePassword(id);
+        } catch (SharePasswordException e)
+        {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+        return ResponseEntity.ok().build();
     }
 
 

@@ -5,8 +5,11 @@ import com.KeyWallet.entity.Password;
 import com.KeyWallet.entity.UserKW;
 import com.KeyWallet.exception.ExceptionMessages;
 import com.KeyWallet.exception.PasswordException;
+import com.KeyWallet.exception.SharePasswordException;
 import com.KeyWallet.models.Pair;
 import com.KeyWallet.models.PasswordDTO;
+import com.KeyWallet.models.PasswordType;
+import com.KeyWallet.models.SharePasswordDTO;
 import com.KeyWallet.repository.PasswordRepository;
 import com.KeyWallet.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,10 +17,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.net.http.HttpRequest;
 import java.security.Key;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -28,12 +32,56 @@ public class PasswordService {
     private final UserRepository userRepository;
     private final AESenc aeSenc;
 
+    private final String keyToSharedPasswords = "hwer82whfiuqedbnfiqoeubfgehggvqeaADFSDFbgvdqahrgbqdsf9bvhuepq985tgy";
+
+    public void sharePassword(SharePasswordDTO dto) throws SharePasswordException {
+
+        Optional<Password> passwordOptional = passwordRepository.findById(dto.getPasswordId());
+        if (passwordOptional.isEmpty()) throw new SharePasswordException(ExceptionMessages.PASSWORD_DOES_NOT_EXIST.getCode());
+        Password password = passwordOptional.get();
+
+        if(password.getParentPasswordId()!=null) throw new SharePasswordException("You can't share this password");
+
+        Optional<UserKW> ownerOptional = userRepository.findById(password.getUserId());
+        if (ownerOptional.isEmpty()) throw new SharePasswordException("Owner doesn't exist");
+        UserKW owner = ownerOptional.get();
+
+        UserKW shareToWho = userRepository.findByLogin(dto.getLogin());
+        if (shareToWho == null) throw new SharePasswordException("User to share doesn't exist");
+
+        Key key = aeSenc.generateKey(dto.getMasterPassword());
+        Key keyToShare = aeSenc.generateKey(keyToSharedPasswords);
+        String passwordString = aeSenc.decrypt(password.getPassword(), key);
+        String finalPasswordString = aeSenc.encrypt(passwordString, keyToShare);
+
+        Password passwordToShare = new Password(null,
+                finalPasswordString,
+                shareToWho.getId(),
+                password.getId(),
+                password.getUrl(),
+                password.getDescription(),
+                password.getLogin(),
+                PasswordType.SHARED_TO_ME
+        );
+
+        passwordRepository.save(passwordToShare);
+
+
+    }
 
     public List<Password> getPasswordsForUser(String userLogin) {
 
         // find user id
         UserKW user = userRepository.findByLogin(userLogin);
-        return passwordRepository.findAllByUserId(user.getId());
+        List<Password> myMainPasswords = passwordRepository.findAllByUserId(user.getId());
+        List<Password> mySharedPasswords = new ArrayList<>();
+        List<Long> myPasswordsId = myMainPasswords.stream().map(Password::getId).collect(Collectors.toList());
+        for(Long id: myPasswordsId){
+           mySharedPasswords.addAll(passwordRepository.findAllByParentPasswordId(id));
+        }
+       mySharedPasswords.forEach(password -> {password.setType(PasswordType.SHARED_BY_ME);});
+        myMainPasswords.addAll(mySharedPasswords);
+        return  myMainPasswords;
     }
 
     @Transactional
@@ -52,9 +100,11 @@ public class PasswordService {
                     null,
                     aeSenc.encrypt(passwordDTO.getPassword(), key),
                     userKW.getId(),
+                    null,
                     passwordDTO.getUrl(),
                     passwordDTO.getDescription(),
-                    passwordDTO.getLogin()
+                    passwordDTO.getLogin(),
+                    PasswordType.MY
             );
 
             passwordRepository.save(password);
@@ -88,8 +138,12 @@ public class PasswordService {
 
         if (passwordOptional.isPresent()) {
             Password password = passwordOptional.get();
-            Key key = aeSenc.generateKey(masterPassword);
-
+            Key key;
+            if (password.getType().equals(PasswordType.SHARED_TO_ME)){
+                key = aeSenc.generateKey(keyToSharedPasswords);
+            }else {
+               key =  aeSenc.generateKey(masterPassword);
+            }
             return aeSenc.decrypt(password.getPassword(), key);
         } else {
             throw new PasswordException(ExceptionMessages.PASSWORD_DOES_NOT_EXIST.getCode());
@@ -109,4 +163,15 @@ public class PasswordService {
         }
     }
 
+    public void deletePassword(Long passwordId) {
+        Optional<Password> passwordOptional = passwordRepository.findById(passwordId);
+        if(passwordOptional.isEmpty()) throw new PasswordException(ExceptionMessages.PASSWORD_DOES_NOT_EXIST.getCode());
+        Password password = passwordOptional.get();
+        passwordRepository.delete(password);
+        List<Password> childs = passwordRepository.findAllByParentPasswordId(passwordId);
+        if(!childs.isEmpty()){
+            passwordRepository.deleteAll(childs);
+        }
+
+    }
 }
