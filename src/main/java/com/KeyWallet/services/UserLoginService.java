@@ -1,9 +1,7 @@
 package com.KeyWallet.services;
 
 import com.KeyWallet.entity.UserLogin;
-import com.KeyWallet.exception.ExceptionMessages;
 import com.KeyWallet.exception.IpAddressException;
-import com.KeyWallet.exception.UserLogInException;
 import com.KeyWallet.repository.UserLoginRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -57,13 +55,12 @@ public class UserLoginService {
 
     public List<UserLogin> getSortedUserLogins(Long userId) {
 
-        Comparator<UserLogin> comparator = Comparator.comparing(UserLogin::getTime);
+        Comparator<UserLogin> comparator = Comparator.comparing(UserLogin::getTime).reversed();
         List<UserLogin> userLogins = userLoginRepository.findUserLoginByIdUser(userId);
         userLogins.sort(comparator);
 
         return userLogins;
     }
-
 
 
 }

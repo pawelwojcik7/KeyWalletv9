@@ -63,7 +63,7 @@ public class IpAddressService {
         } else { // jezeli rekord o danym ip istnieje w bazie danych
 
             ipAddressRepository.updateOkLoginNum(ipAddressObject.getOkLoginNum() + 1, ipAddressObject.getId()); // update good login num
-
+            ipAddressRepository.updateLastBadLoginNum(0, ipAddressObject.getId());
         }
     }
 
