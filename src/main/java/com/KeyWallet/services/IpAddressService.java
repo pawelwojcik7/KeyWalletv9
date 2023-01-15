@@ -95,7 +95,7 @@ public class IpAddressService {
                 updateBadLoginNum(ipAddressObject.getBadLoginNum() + 1, ipAddressObject.getId()); // zwiekszamy ogólna liczbe złych logowań
                 saveNewIncorrectLogin(ipAddressObject.getId(), sessionId); // zapisujemy nowy rekord incorrectLogin
 
-                throw new IpAddressException(ExceptionMessages.NEW_PERMANENT_BLOCK_IP_ADDRESS.getCode()); // wyrzucamy wyjątek że addres został zablokowany
+                throw new IpAddressException(ExceptionMessages.PERMANENT_BLOCK_IP_ADDRESS.getCode()); // wyrzucamy wyjątek że addres został zablokowany
             }
 
             if (ipAddressObject.getLastBadLoginNum() >= 8) {
@@ -106,7 +106,7 @@ public class IpAddressService {
                 updateBadLoginNum(ipAddressObject.getBadLoginNum() + 1, ipAddressObject.getId());
                 saveNewIncorrectLogin(ipAddressObject.getId(), sessionId); // zapisujemy nowy rekord incorrectLogin
 
-                throw new IpAddressException(ExceptionMessages.NEW_TEMP_BLOCK_IP_ADDRESS.getCode() + newTempBlock.toString());
+                throw new IpAddressException(ExceptionMessages.TEMP_BLOCK_IP_ADDRESS.getCode() + newTempBlock.toString());
 
             }
             if (ipAddressObject.getLastBadLoginNum() >= 6) {
@@ -117,7 +117,7 @@ public class IpAddressService {
                 updateBadLoginNum(ipAddressObject.getBadLoginNum() + 1, ipAddressObject.getId());
                 saveNewIncorrectLogin(ipAddressObject.getId(), sessionId); // zapisujemy nowy rekord incorrectLogin
 
-                throw new IpAddressException(ExceptionMessages.NEW_TEMP_BLOCK_IP_ADDRESS.getCode() + newTempBlock.toString());
+                throw new IpAddressException(ExceptionMessages.TEMP_BLOCK_IP_ADDRESS.getCode() + newTempBlock.toString());
 
             }
 

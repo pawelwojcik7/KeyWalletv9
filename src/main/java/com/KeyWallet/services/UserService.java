@@ -43,10 +43,14 @@ public class UserService {
 
 
         UserKW userKW = userRepository.findByLogin(userDTO.getLogin()); // szukamy czy uzytkownik istnieje
+
+
         if (Objects.isNull(userKW)) { // jezeli nie istnieje
-            ipAddressService.badLoginFromIp(ipAddress, session.getId()); // rejestrujemy bad login z tego ip / przy odpowiedniej ilosci prób rzucamy wyjatek
+            ipAddressService.badLoginFromIp(ipAddress, session.getId());
             throw new UserLogInException(ExceptionMessages.USER_DOES_NOT_EXIST.getCode()); // wyjaek
         }
+
+
         //check(userKW.getId(), session, ipAddress);
         Pair<String, String> encryptedPasswordAndSalt = sha512.encodeHashValue(userDTO.getPassword(), userKW.getSalt());
         UserKW probablyUser = new UserKW(
@@ -61,6 +65,23 @@ public class UserService {
                 throw new UserLogInException(ExceptionMessages.WRONG_PASSWORD.getCode());
             } else {
                 ipAddressService.goodLoginFromIp(ipAddress, session.getId());
+                userLoginService.registerCorrectLogin(userKW.getId(), session, ipAddress);
+                List<UserLogin> userLogins = userLoginService.getSortedUserLogins(userKW.getId());
+                if (userLogins.size() < 2) {
+                    return;
+                }
+                if (userLogins.size() == 2) {
+                    checkTwoLast(userLogins, userKW.getId(), session, ipAddress);
+                }
+                if (userLogins.size() == 3) {
+                    checkThreeLast(userLogins, userKW.getId(), session, ipAddress);
+                    checkTwoLast(userLogins, userKW.getId(), session, ipAddress);
+                }
+                if (userLogins.size() >= 4) {
+                    checkFourLast(userLogins, userKW.getId(), session, ipAddress);
+                    checkThreeLast(userLogins, userKW.getId(), session, ipAddress);
+                    checkTwoLast(userLogins, userKW.getId(), session, ipAddress);
+                }
             }
         } else {
             String hmacCodedIncomingUserPassword = hmac.calculateHMAC(probablyUser.getPasswordHash(), pepperProvider.getPepper());
@@ -69,6 +90,23 @@ public class UserService {
                 throw new UserLogInException(ExceptionMessages.WRONG_PASSWORD.getCode());
             } else {
                 userLoginService.registerCorrectLogin(userKW.getId(), session, ipAddress);
+                ipAddressService.goodLoginFromIp(ipAddress, session.getId());
+                List<UserLogin> userLogins = userLoginService.getSortedUserLogins(userKW.getId());
+                if (userLogins.size() < 2) {
+                    return;
+                }
+                if (userLogins.size() == 2) {
+                    checkTwoLast(userLogins, userKW.getId(), session, ipAddress);
+                }
+                if (userLogins.size() == 3) {
+                    checkThreeLast(userLogins, userKW.getId(), session, ipAddress);
+                    checkTwoLast(userLogins, userKW.getId(), session, ipAddress);
+                }
+                if (userLogins.size() >= 4) {
+                    checkFourLast(userLogins, userKW.getId(), session, ipAddress);
+                    checkThreeLast(userLogins, userKW.getId(), session, ipAddress);
+                    checkTwoLast(userLogins, userKW.getId(), session, ipAddress);
+                }
             }
         }
 
@@ -78,27 +116,11 @@ public class UserService {
     public void check(Long userId, HttpSession session, String ipAddress) throws UserLogInException {
 
         Optional<UserKW> optUser = userRepository.findById(userId);
-
-        if (optUser.get().getLockoutTime().isAfter(OffsetDateTime.now())) { // TODO : tu pluje nullem
+        if (optUser.get().getLockoutTime().isAfter(OffsetDateTime.now())) {
             userLoginService.registerBadLogin(userId, session, ipAddress);
             throw new UserLogInException(ExceptionMessages.USER_BLOCKED.getCode() + optUser.get().getLockoutTime());
         }
-        List<UserLogin> userLogins = userLoginService.getSortedUserLogins(userId);
-        if (userLogins.size() < 2) {
-            return;
-        }
-        if (userLogins.size() == 2) {
-            checkTwoLast(userLogins, userId, session, ipAddress);
-        }
-        if (userLogins.size() == 3) {
-            checkThreeLast(userLogins, userId, session, ipAddress);
-            checkTwoLast(userLogins, userId, session, ipAddress);
-        }
-        if (userLogins.size() >= 4) {
-            checkFourLast(userLogins, userId, session, ipAddress);
-            checkThreeLast(userLogins, userId, session, ipAddress);
-            checkTwoLast(userLogins, userId, session, ipAddress);
-        }
+
     }
 
     @Transactional(dontRollbackOn = {UserLogInException.class, IpAddressException.class})

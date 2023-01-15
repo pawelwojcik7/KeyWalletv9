@@ -20,21 +20,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class KeyWalletController {
 
-
-    @SuppressWarnings("ConstantConditions")
-    protected String fetchClientIpAddr() {
-        HttpServletRequest request = ((ServletRequestAttributes) (RequestContextHolder.getRequestAttributes())).getRequest();
-        String ip = Optional.ofNullable(request.getHeader("X-FORWARDED-FOR")).orElse(request.getRemoteAddr());
-        if (ip.equals("0:0:0:0:0:0:0:1")) ip = "127.0.0.1";
-        Assert.isTrue(ip.chars().filter($ -> $ == '.').count() == 3, "Illegal IP: " + ip);
-        return ip;
-    }
-
     private final PasswordService passwordService;
     private final UserRegisterService userRegisterService;
-
     private final UserService userService;
-
     private final MasterPasswordService masterPasswordService;
     private final SmsCodeService smsCodeService;
 
@@ -181,5 +169,14 @@ public class KeyWalletController {
         return ResponseEntity.ok().build();
     }
 
+
+    @SuppressWarnings("ConstantConditions")
+    protected String fetchClientIpAddr() {
+        HttpServletRequest request = ((ServletRequestAttributes) (RequestContextHolder.getRequestAttributes())).getRequest();
+        String ip = Optional.ofNullable(request.getHeader("X-FORWARDED-FOR")).orElse(request.getRemoteAddr());
+        if (ip.equals("0:0:0:0:0:0:0:1")) ip = "127.0.0.1";
+        Assert.isTrue(ip.chars().filter($ -> $ == '.').count() == 3, "Illegal IP: " + ip);
+        return ip;
+    }
 
 }

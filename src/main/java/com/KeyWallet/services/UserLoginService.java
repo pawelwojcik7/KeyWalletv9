@@ -16,17 +16,18 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class UserLoginService {
+
     private final UserLoginRepository userLoginRepository;
     private final IpAddressService ipAddressService;
 
-
     public void registerCorrectLogin(Long userId, HttpSession session, String ipAddress) {
+
         ipAddressService.goodLoginFromIp(ipAddress, session.getId());
         userLoginRepository.save(
                 new UserLogin(
                         null,
                         OffsetDateTime.now(),
-                        false,
+                        true,
                         userId,
                         session.toString(),
                         ipAddressService.getIpAddressIdByIpAddress(ipAddress)
@@ -52,13 +53,14 @@ public class UserLoginService {
                     )
             );
         }
-
     }
 
     public List<UserLogin> getSortedUserLogins(Long userId) {
+
         Comparator<UserLogin> comparator = Comparator.comparing(UserLogin::getTime);
         List<UserLogin> userLogins = userLoginRepository.findUserLoginByIdUser(userId);
         userLogins.sort(comparator);
+
         return userLogins;
     }
 
