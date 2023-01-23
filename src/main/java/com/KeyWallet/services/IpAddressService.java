@@ -12,7 +12,10 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +24,10 @@ public class IpAddressService {
     private final IpAddressRepository ipAddressRepository;
     private final IncorrectLoginsRepository incorrectLoginsRepository;
 
+
+    public List<IpAddress> getAll(){
+        return StreamSupport.stream(ipAddressRepository.findAll().spliterator(), false).collect(Collectors.toList());
+    }
 
     public Long getIpAddressIdByIpAddress(String ipAddress){
        return ipAddressRepository.findByIpAddress(ipAddress).getId();
@@ -159,4 +166,14 @@ public class IpAddressService {
         ipAddressRepository.updatePermanentLock(true, ipAddressId);
     }
 
+    @Transactional
+    public void block(Long id) {
+        ipAddressRepository.updatePermanentLock(true, id);
+    }
+@Transactional
+    public void unblock(Long id){
+        ipAddressRepository.updatePermanentLock(false, id);
+    ipAddressRepository.updateBadLoginNum(0, id);
+    ipAddressRepository.updateLastBadLoginNum(0, id);
+    }
 }

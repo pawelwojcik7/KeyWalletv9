@@ -1,6 +1,8 @@
 package com.KeyWallet.api;
 
+import com.KeyWallet.entity.IpAddress;
 import com.KeyWallet.entity.Password;
+import com.KeyWallet.entity.UserLogin;
 import com.KeyWallet.exception.*;
 import com.KeyWallet.models.*;
 import com.KeyWallet.services.*;
@@ -25,6 +27,10 @@ public class KeyWalletController {
     private final UserService userService;
     private final MasterPasswordService masterPasswordService;
     private final SmsCodeService smsCodeService;
+
+    private final IpAddressService ipAddressService;
+
+    private final UserLoginService userLoginService;
 
 
 
@@ -132,8 +138,13 @@ public class KeyWalletController {
     @PostMapping("/password/change")
     public ResponseEntity<?> chengeUserMasterPassword(@RequestBody ChangePasswordDTO changePasswordDTO) {
 
-        masterPasswordService.changeMasterPassword(changePasswordDTO);
-        return ResponseEntity.ok().build();
+        try {
+            masterPasswordService.changeMasterPassword(changePasswordDTO);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+
     }
 
     @CrossOrigin(origins = "http://localhost:4200")
@@ -144,8 +155,45 @@ public class KeyWalletController {
     }
 
     @CrossOrigin(origins = "http://localhost:4200")
+    @GetMapping("/ipAddresses")
+    public ResponseEntity<List<IpAddress>> getAllIpAddresses() {
+
+        return ResponseEntity.ok(ipAddressService.getAll());
+    }
+
+    @CrossOrigin(origins = "http://localhost:4200")
+    @GetMapping("/ipAddresses/block/{id}")
+    public ResponseEntity<?> blockIpAddress(@PathVariable Long id) {
+        try {
+            ipAddressService.block(id);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    @CrossOrigin(origins = "http://localhost:4200")
+    @GetMapping("/ipAddresses/unblock/{id}")
+    public ResponseEntity<?> unblockIpAddress(@PathVariable Long id) {
+
+        try {
+            ipAddressService.unblock(id);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+          return ResponseEntity.badRequest().body(e.getMessage());
+        }
+
+    }
+
+    @CrossOrigin(origins = "http://localhost:4200")
+    @GetMapping("/userLogins/{login}")
+    public ResponseEntity<List<UserLogin>> blockIpAddress(@PathVariable String login) {
+     return ResponseEntity.ok(userLoginService.getAllForUser(login));
+    }
+
+
+    @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/password/share")
-    public ResponseEntity<?> chengeUserMasterPassword(@RequestBody SharePasswordDTO body) {
+    public ResponseEntity<?> sharePassword(@RequestBody SharePasswordDTO body) {
 
         try {
             passwordService.sharePassword(body);

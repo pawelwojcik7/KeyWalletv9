@@ -45,9 +45,13 @@ public class PasswordService {
         Optional<UserKW> ownerOptional = userRepository.findById(password.getUserId());
         if (ownerOptional.isEmpty()) throw new SharePasswordException("Owner doesn't exist");
         UserKW owner = ownerOptional.get();
+        if(owner.getLogin().equals(dto.getLogin())) throw new SharePasswordException("You can't share password to yourself");
 
         UserKW shareToWho = userRepository.findByLogin(dto.getLogin());
         if (shareToWho == null) throw new SharePasswordException("User to share doesn't exist");
+
+        List<Password> shareToWhoPasswords = passwordRepository.findAllByParentPasswordIdAndUserId(password.getId(), shareToWho.getId());
+        if(shareToWhoPasswords.size()>=1) throw new SharePasswordException("You already share this password to this user");
 
         Key key = aeSenc.generateKey(dto.getMasterPassword());
         Key keyToShare = aeSenc.generateKey(keyToSharedPasswords);

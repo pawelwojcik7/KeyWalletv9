@@ -3,7 +3,9 @@ package com.KeyWallet.services;
 import com.KeyWallet.entity.UserLogin;
 import com.KeyWallet.exception.IpAddressException;
 import com.KeyWallet.repository.UserLoginRepository;
+import com.KeyWallet.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.catalina.User;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpSession;
@@ -17,6 +19,8 @@ public class UserLoginService {
 
     private final UserLoginRepository userLoginRepository;
     private final IpAddressService ipAddressService;
+
+    private final UserRepository userRepository;
 
     public void registerCorrectLogin(Long userId, HttpSession session, String ipAddress) {
 
@@ -63,4 +67,7 @@ public class UserLoginService {
     }
 
 
+    public List<UserLogin> getAllForUser(String login) {
+        return userLoginRepository.findUserLoginByIdUser(userRepository.findByLogin(login).getId());
+    }
 }
