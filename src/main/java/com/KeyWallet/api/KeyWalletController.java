@@ -1,8 +1,6 @@
 package com.KeyWallet.api;
 
-import com.KeyWallet.entity.IpAddress;
 import com.KeyWallet.entity.Password;
-import com.KeyWallet.entity.UserLogin;
 import com.KeyWallet.exception.*;
 import com.KeyWallet.models.*;
 import com.KeyWallet.services.*;
@@ -14,7 +12,6 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,20 +23,16 @@ public class KeyWalletController {
     private final UserRegisterService userRegisterService;
     private final UserService userService;
     private final MasterPasswordService masterPasswordService;
-    private final SmsCodeService smsCodeService;
 
-    private final IpAddressService ipAddressService;
-
-    private final UserLoginService userLoginService;
 
 
 
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody UserDTO user, HttpSession session) {
+    public ResponseEntity<?> loginUser(@RequestBody UserDTO user) {
 
         try {
-            userService.loginUser(user, session, fetchClientIpAddr());
+            userService.loginUser(user);
             return ResponseEntity.ok().build();
         } catch (UserLogInException | IpAddressException e) {
 
@@ -60,32 +53,6 @@ public class KeyWalletController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
 
-
-    }
-
-    @CrossOrigin(origins = "http://localhost:4200")
-    @PostMapping("/sms/code/confirmation")
-    public ResponseEntity<?> confirmUser(@RequestBody SmsCodeDTO smsCodeDTO) {
-
-        try {
-            smsCodeService.verify(smsCodeDTO.getSmsCode(), smsCodeDTO.getLogin());
-            return ResponseEntity.ok().build();
-        } catch (SmsCodeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-
-    }
-
-    @CrossOrigin(origins = "http://localhost:4200")
-    @PostMapping("/sms/code/change")
-    public ResponseEntity<?> changeSmsCodeForUser(@RequestBody String login) {
-
-        try {
-            smsCodeService.changeCode(login);
-            return ResponseEntity.ok().build();
-        } catch (SmsCodeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
 
     }
 
@@ -154,42 +121,6 @@ public class KeyWalletController {
         return ResponseEntity.ok(passwordService.getPasswordsForUser(userLogin));
     }
 
-    @CrossOrigin(origins = "http://localhost:4200")
-    @GetMapping("/ipAddresses")
-    public ResponseEntity<List<IpAddress>> getAllIpAddresses() {
-
-        return ResponseEntity.ok(ipAddressService.getAll());
-    }
-
-    @CrossOrigin(origins = "http://localhost:4200")
-    @GetMapping("/ipAddresses/block/{id}")
-    public ResponseEntity<?> blockIpAddress(@PathVariable Long id) {
-        try {
-            ipAddressService.block(id);
-            return ResponseEntity.ok().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-    @CrossOrigin(origins = "http://localhost:4200")
-    @GetMapping("/ipAddresses/unblock/{id}")
-    public ResponseEntity<?> unblockIpAddress(@PathVariable Long id) {
-
-        try {
-            ipAddressService.unblock(id);
-            return ResponseEntity.ok().build();
-        } catch (RuntimeException e) {
-          return ResponseEntity.badRequest().body(e.getMessage());
-        }
-
-    }
-
-    @CrossOrigin(origins = "http://localhost:4200")
-    @GetMapping("/userLogins/{login}")
-    public ResponseEntity<List<UserLogin>> blockIpAddress(@PathVariable String login) {
-     return ResponseEntity.ok(userLoginService.getAllForUser(login));
-    }
-
 
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/password/share")
@@ -218,13 +149,5 @@ public class KeyWalletController {
     }
 
 
-    @SuppressWarnings("ConstantConditions")
-    protected String fetchClientIpAddr() {
-        HttpServletRequest request = ((ServletRequestAttributes) (RequestContextHolder.getRequestAttributes())).getRequest();
-        String ip = Optional.ofNullable(request.getHeader("X-FORWARDED-FOR")).orElse(request.getRemoteAddr());
-        if (ip.equals("0:0:0:0:0:0:0:1")) ip = "127.0.0.1";
-        Assert.isTrue(ip.chars().filter($ -> $ == '.').count() == 3, "Illegal IP: " + ip);
-        return ip;
-    }
 
 }
