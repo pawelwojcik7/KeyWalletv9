@@ -1,15 +1,11 @@
 package com.KeyWallet.api;
 
+import com.KeyWallet.entity.IpAddress;
 import com.KeyWallet.entity.Password;
-import com.KeyWallet.exception.PasswordException;
-import com.KeyWallet.exception.UserLogInException;
-import com.KeyWallet.exception.UserRegisterException;
-import com.KeyWallet.models.ChangePasswordDTO;
-import com.KeyWallet.models.CryptResponse;
-import com.KeyWallet.models.PasswordDTO;
-import com.KeyWallet.models.UserDTO;
-import com.KeyWallet.services.PasswordService;
-import com.KeyWallet.services.UserService;
+import com.KeyWallet.entity.UserLogin;
+import com.KeyWallet.exception.*;
+import com.KeyWallet.models.*;
+import com.KeyWallet.services.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
@@ -26,26 +22,26 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class KeyWalletController {
 
-    @SuppressWarnings("ConstantConditions")
-    protected String fetchClientIpAddr() {
-        HttpServletRequest request = ((ServletRequestAttributes) (RequestContextHolder.getRequestAttributes())).getRequest();
-        String ip = Optional.ofNullable(request.getHeader("X-FORWARDED-FOR")).orElse(request.getRemoteAddr());
-        if (ip.equals("0:0:0:0:0:0:0:1")) ip = "127.0.0.1";
-        Assert.isTrue(ip.chars().filter($ -> $ == '.').count() == 3, "Illegal IP: " + ip);
-        return ip;
-    }
-
     private final PasswordService passwordService;
+    private final UserRegisterService userRegisterService;
     private final UserService userService;
+    private final MasterPasswordService masterPasswordService;
+    private final SmsCodeService smsCodeService;
+
+    private final IpAddressService ipAddressService;
+
+    private final UserLoginService userLoginService;
+
+
 
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody UserDTO user, HttpSession session) {
 
         try {
-            userService.loginUser(user, session.getId(), fetchClientIpAddr());
+            userService.loginUser(user, session, fetchClientIpAddr());
             return ResponseEntity.ok().build();
-        } catch (UserLogInException e) {
+        } catch (UserLogInException | IpAddressException e) {
 
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -55,15 +51,44 @@ public class KeyWalletController {
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody UserDTO user) {
+
         try {
-            userService.registerUser(user);
+            userRegisterService.registerUser(user);
             return ResponseEntity.ok().build();
         } catch (UserRegisterException e) {
 
             return ResponseEntity.badRequest().body(e.getMessage());
         }
 
+
     }
+
+    @CrossOrigin(origins = "http://localhost:4200")
+    @PostMapping("/sms/code/confirmation")
+    public ResponseEntity<?> confirmUser(@RequestBody SmsCodeDTO smsCodeDTO) {
+
+        try {
+            smsCodeService.verify(smsCodeDTO.getSmsCode(), smsCodeDTO.getLogin());
+            return ResponseEntity.ok().build();
+        } catch (SmsCodeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+
+    }
+
+    @CrossOrigin(origins = "http://localhost:4200")
+    @PostMapping("/sms/code/change")
+    public ResponseEntity<?> changeSmsCodeForUser(@RequestBody String login) {
+
+        try {
+            smsCodeService.changeCode(login);
+            return ResponseEntity.ok().build();
+        } catch (SmsCodeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+
+    }
+
 
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/add-password")
@@ -113,8 +138,13 @@ public class KeyWalletController {
     @PostMapping("/password/change")
     public ResponseEntity<?> chengeUserMasterPassword(@RequestBody ChangePasswordDTO changePasswordDTO) {
 
-        userService.changeMasterPassword(changePasswordDTO);
-        return ResponseEntity.ok().build();
+        try {
+            masterPasswordService.changeMasterPassword(changePasswordDTO);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+
     }
 
     @CrossOrigin(origins = "http://localhost:4200")
@@ -124,5 +154,77 @@ public class KeyWalletController {
         return ResponseEntity.ok(passwordService.getPasswordsForUser(userLogin));
     }
 
+    @CrossOrigin(origins = "http://localhost:4200")
+    @GetMapping("/ipAddresses")
+    public ResponseEntity<List<IpAddress>> getAllIpAddresses() {
+
+        return ResponseEntity.ok(ipAddressService.getAll());
+    }
+
+    @CrossOrigin(origins = "http://localhost:4200")
+    @GetMapping("/ipAddresses/block/{id}")
+    public ResponseEntity<?> blockIpAddress(@PathVariable Long id) {
+        try {
+            ipAddressService.block(id);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    @CrossOrigin(origins = "http://localhost:4200")
+    @GetMapping("/ipAddresses/unblock/{id}")
+    public ResponseEntity<?> unblockIpAddress(@PathVariable Long id) {
+
+        try {
+            ipAddressService.unblock(id);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+          return ResponseEntity.badRequest().body(e.getMessage());
+        }
+
+    }
+
+    @CrossOrigin(origins = "http://localhost:4200")
+    @GetMapping("/userLogins/{login}")
+    public ResponseEntity<List<UserLogin>> blockIpAddress(@PathVariable String login) {
+     return ResponseEntity.ok(userLoginService.getAllForUser(login));
+    }
+
+
+    @CrossOrigin(origins = "http://localhost:4200")
+    @PostMapping("/password/share")
+    public ResponseEntity<?> sharePassword(@RequestBody SharePasswordDTO body) {
+
+        try {
+            passwordService.sharePassword(body);
+        } catch (SharePasswordException e)
+        {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    @CrossOrigin(origins = "http://localhost:4200")
+    @DeleteMapping ("/password/{id}")
+    public ResponseEntity<?> deletePassword( @PathVariable Long id) {
+
+        try {
+            passwordService.deletePassword(id);
+        } catch (SharePasswordException e)
+        {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+        return ResponseEntity.ok().build();
+    }
+
+
+    @SuppressWarnings("ConstantConditions")
+    protected String fetchClientIpAddr() {
+        HttpServletRequest request = ((ServletRequestAttributes) (RequestContextHolder.getRequestAttributes())).getRequest();
+        String ip = Optional.ofNullable(request.getHeader("X-FORWARDED-FOR")).orElse(request.getRemoteAddr());
+        if (ip.equals("0:0:0:0:0:0:0:1")) ip = "127.0.0.1";
+        Assert.isTrue(ip.chars().filter($ -> $ == '.').count() == 3, "Illegal IP: " + ip);
+        return ip;
+    }
 
 }

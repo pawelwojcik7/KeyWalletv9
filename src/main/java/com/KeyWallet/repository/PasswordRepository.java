@@ -13,6 +13,9 @@ import java.util.List;
 public interface PasswordRepository extends CrudRepository<Password, Long> {
 
     List<Password> findAllByUserId(Long id);
+    List<Password> findAllByParentPasswordId(Long parentPasswordId);
+
+    List<Password> findAllByParentPasswordIdAndUserId(Long parenPasswordId, Long userId);
 
     @Modifying
     @Query("update password set password = :password where id = :id")

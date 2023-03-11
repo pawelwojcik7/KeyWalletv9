@@ -9,14 +9,11 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class
-PasswordDTO {
+public class SharePasswordDTO {
 
-    private UserDTO userDTO;
-    private Long passId;
     private String login;
-    private String password;
-    private String url;
-    private String description;
+    private Long passwordId;
+    private String masterPassword;
+    private String who;
 
 }

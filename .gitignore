@@ -1,2 +1,4 @@
 # Project exclude paths
 /target/
+/.idea/google-java-format.xml
+/key-wallet.mv.db
